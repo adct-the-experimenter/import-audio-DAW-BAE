@@ -26,3 +26,9 @@ Enable the plugin 'Export Audio To Binaural Audio Editor'.
 Then, select audio to export, simply go to Effects, and then choose 'Export Audio To Binaural Audio Editor'
 
 Finally, simply click on the 'Import Audio DAW' button of the soundproducer track that you wish to have the audio exported from DAW.
+
+### Important Note About Format
+
+The plugin exports audio in a mono format 16-bit PCM audio format in WAV file.
+
+Use this plugin on mono tracks only and change the format to 16-bit in Audacity by clicking on the name in the track.
