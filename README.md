@@ -23,4 +23,6 @@ It should look something like this your-build-dir/binaural-audio-editor/src/time
 Also open Audacity. Go to Effect->Add/Remove Plug-ins.
 Enable the plugin 'Export Audio To Binaural Audio Editor'.
 
-Finally, select audio to export, simply go to Effects, and then choose 'Export Audio To Binaural Audio Editor'
+Then, select audio to export, simply go to Effects, and then choose 'Export Audio To Binaural Audio Editor'
+
+Finally, simply click on the 'Import Audio DAW' button of the soundproducer track that you wish to have the audio exported from DAW.
