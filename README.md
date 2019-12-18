@@ -31,4 +31,5 @@ Finally, simply click on the 'Import Audio DAW' button of the soundproducer trac
 
 The plugin exports audio in a mono format 16-bit PCM audio format in WAV file.
 
-Use this plugin on mono tracks only and change the format to 16-bit in Audacity by clicking on the name in the track.
+Use this plugin on mono tracks only and change the format to 16-bit in Audacity 
+by exporting the current file in 16-bit and then opening the newly created file.
