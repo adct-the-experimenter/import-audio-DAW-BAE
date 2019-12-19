@@ -10,13 +10,13 @@
 #mono variant
 <http://adfxz.com/plugins/importDAWBAE#Mono>
         a lv2:Plugin ;
-        lv2:binary <importDAWBAE@LIB_EXT@>  ;
+        lv2:binary <importDAWBAE.so>  ;
         rdfs:seeAlso <importDAW.ttl> .
 
 #stereo variant
 <http://adfxz.com/plugins/importDAWBAE#Stereo>
         a lv2:Plugin ;
-        lv2:binary <importDAWBAE@LIB_EXT@>  ;
+        lv2:binary <importDAWBAE.so>  ;
         rdfs:seeAlso <importDAW.ttl> .
 
         
@@ -24,9 +24,9 @@
 <http://adfxz.com/plugins/importDAWBAE> a lv2:Plugin .
 
 #This says “importDAWBAE has executable code in the file importDAEBAE.so”. 
-#Relative URIs in manifest files are relative to the bundle directory, so this refers to the file amp.so in the same directory as this manifest.ttl file.
+#Relative URIs in manifest files are relative to the bundle directory, so this refers to the file importDAWBAE.so in the same directory as this manifest.ttl file.
 <http://adfxz.com/plugins/importDAWBAE> lv2:binary <importDAWBAE.so> .
 
-#This says “there is more information about simple-amp in the file amp.ttl”. 
+#This says “there is more information about import-DAW-BAE in the file importDAW.ttl”. 
 #The host will look at all such files when it needs to actually use or investigate the plugin.
 <http://adfxz.com/plugins/importDAWBAE> rdfs:seeAlso <importDAW.ttl> .

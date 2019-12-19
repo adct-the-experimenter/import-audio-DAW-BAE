@@ -26,7 +26,7 @@ typedef enum {
 typedef struct {
         // Port buffers
         float* input[2];
-        float*       output[2];
+        float* output[2];
         
          // Instantiation settings
         uint32_t n_channels;
@@ -42,24 +42,31 @@ static LV2_Handle instantiate(const LV2_Descriptor*     descriptor,
             const char*               bundle_path,
             const LV2_Feature* const* features)
 {
-        ImporterDAWBAE* importer = (ImporterDAWBAE*)malloc(sizeof(ImporterDAWBAE));
 		
-		// Decide which variant to use depending on the plugin URI
-        if (!strcmp(descriptor->URI, IMPORT_DAW_BAE_URI "#Stereo")) 
-        {
-                importer->n_channels = 2;
-        } 
-        else if (!strcmp(descriptor->URI, IMPORT_DAW_BAE_URI "#Mono")) 
-        {
-                importer->n_channels = 1;
-        } 
-        else 
-        {
-			free(importer);
-			return NULL;
-        }
-		
-        return (LV2_Handle)importer;
+	(void)descriptor;   // Unused variable
+	(void)bundle_path;  // Unused variable
+
+	ImporterDAWBAE* importer = (ImporterDAWBAE*)malloc(sizeof(ImporterDAWBAE));
+	if(!importer)
+	{
+		return NULL;
+	}
+	// Decide which variant to use depending on the plugin URI
+	if (!strcmp(descriptor->URI, IMPORT_DAW_BAE_URI "#Stereo")) 
+	{
+			importer->n_channels = 2;
+	} 
+	else if (!strcmp(descriptor->URI, IMPORT_DAW_BAE_URI "#Mono")) 
+	{
+			importer->n_channels = 1;
+	} 
+	else 
+	{
+		free(importer);
+		return NULL;
+	}
+
+	return (LV2_Handle)importer;
 }
 
 //function called by host to connect a particular port to a buffer
@@ -69,23 +76,23 @@ static void connect_port(LV2_Handle instance,
              uint32_t   port,
              void*      data)
 {
-        ImporterDAWBAE* importer = (ImporterDAWBAE*)instance;
+	ImporterDAWBAE* importer = (ImporterDAWBAE*)instance;
 
-        switch ((PortIndex)port) 
-        {
-			case DAW_MONO_INPUT:
-                importer->input[0] = (float*)data;
-                break;
-			case DAW_MONO_OUTPUT:
-                importer->output[0] = (float*)data;
-                break;
-            case DAW_STEREO_INPUT:
-                importer->input[1] = (float*)data;
-                break;
-			case DAW_STEREO_OUTPUT:
-                importer->output[1] = (float*)data;
-                break;
-        }
+	switch ((PortIndex)port) 
+	{
+		case DAW_MONO_INPUT:
+			importer->input[0] = (float*)data;
+			break;
+		case DAW_MONO_OUTPUT:
+			importer->output[0] = (float*)data;
+			break;
+		case DAW_STEREO_INPUT:
+			importer->input[1] = (float*)data;
+			break;
+		case DAW_STEREO_OUTPUT:
+			importer->output[1] = (float*)data;
+			break;
+	}
 }
 
 //The activate() method is called by the host to initialise and prepare the plugin instance for running. 
@@ -152,7 +159,7 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 			
 			for (uint32_t pos = 0; pos < n_samples; pos++) 
 			{
-				mono_output[pos] = mono_input[pos];	
+				//mono_output[pos] = mono_input[pos];	
 				exportOut[pos] = mono_input[pos];
 			}
 		}
@@ -166,9 +173,13 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 			
 			for (uint32_t pos = 0; pos < n_samples; pos++) 
 			{
-				stereo_output[pos] = stereo_input[pos];	
+				//stereo_output[pos] = stereo_input[pos];	
 				exportOut[pos] = stereo_input[pos];
 			}
+		}
+		else
+		{
+			return;
 		}
        
         
@@ -184,8 +195,8 @@ static void run(LV2_Handle instance, uint32_t n_samples)
         //imposing export output restrictions
 		SF_INFO sfinfo;
 		
-		sfinfo.channels = 1; 
-		sfinfo.samplerate = SAMPLE_RATE;
+		sfinfo.channels = importer->n_channels; 
+		sfinfo.samplerate = importer->rate;
 		sfinfo.format = (SF_FORMAT_WAV | SF_FORMAT_PCM_16 ); 
 
 		SNDFILE * outFile;
@@ -272,8 +283,11 @@ LV2_SYMBOL_EXPORT const LV2_Descriptor* lv2_descriptor(uint32_t index)
 {
         switch (index) 
         {
-			case 0:  return &descriptor_mono;
-			case 1:  return &descriptor_stereo;
-			default: return NULL;
+			case 0:  
+				return &descriptor_mono;
+			case 1:  
+				return &descriptor_stereo;
+			default: 
+				return NULL;
         }
 }
