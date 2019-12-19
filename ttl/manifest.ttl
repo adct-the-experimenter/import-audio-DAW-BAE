@@ -7,10 +7,18 @@
 #full description in amp.ttl. These paths are relative to the bundle directory.
 # ; is a line continuation to continue previous subject
 
-<http://adfxz.com/plugins/importDAWBAE>
+#mono variant
+<http://adfxz.com/plugins/importDAWBAE#Mono>
         a lv2:Plugin ;
         lv2:binary <importDAWBAE@LIB_EXT@>  ;
         rdfs:seeAlso <importDAW.ttl> .
+
+#stereo variant
+<http://adfxz.com/plugins/importDAWBAE#Stereo>
+        a lv2:Plugin ;
+        lv2:binary <importDAWBAE@LIB_EXT@>  ;
+        rdfs:seeAlso <importDAW.ttl> .
+
         
 # This statement means “http://adfxz.com/plugins/importDAWBAE is an LV2 plugin”. a = TURTLE shortcut for rdf:type
 <http://adfxz.com/plugins/importDAWBAE> a lv2:Plugin .

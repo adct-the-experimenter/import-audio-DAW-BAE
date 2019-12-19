@@ -1,5 +1,8 @@
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+
 #include "lv2/lv2plug.in/ns/lv2core/lv2.h" // from URI of LV2 specification http://lv2plug.in/ns/lv2core
 
 #include "sndfile.h"
@@ -12,16 +15,23 @@
 
 //ports are referred to by index, the order of which defined
 typedef enum {
-        DAW_INPUT  = 0,
-        DAW_OUTPUT = 1
+        DAW_MONO_INPUT  = 0,
+        DAW_MONO_OUTPUT = 1,
+        DAW_STEREO_INPUT = 2,
+        DAW_STEREO_OUTPUT = 3,
 } PortIndex;
 
 //where data associated with the plugin is stored
 //depends on index
 typedef struct {
         // Port buffers
-        const float* input;
-        float*       output;
+        float* input[2];
+        float*       output[2];
+        
+         // Instantiation settings
+        uint32_t n_channels;
+        double   rate;
+        
 } ImporterDAWBAE;
 
 
@@ -32,9 +42,24 @@ static LV2_Handle instantiate(const LV2_Descriptor*     descriptor,
             const char*               bundle_path,
             const LV2_Feature* const* features)
 {
-        ImporterDAWBAE* amp = (ImporterDAWBAE*)malloc(sizeof(ImporterDAWBAE));
-
-        return (LV2_Handle)amp;
+        ImporterDAWBAE* importer = (ImporterDAWBAE*)malloc(sizeof(ImporterDAWBAE));
+		
+		// Decide which variant to use depending on the plugin URI
+        if (!strcmp(descriptor->URI, IMPORT_DAW_BAE_URI "#Stereo")) 
+        {
+                importer->n_channels = 2;
+        } 
+        else if (!strcmp(descriptor->URI, IMPORT_DAW_BAE_URI "#Mono")) 
+        {
+                importer->n_channels = 1;
+        } 
+        else 
+        {
+			free(importer);
+			return NULL;
+        }
+		
+        return (LV2_Handle)importer;
 }
 
 //function called by host to connect a particular port to a buffer
@@ -48,11 +73,17 @@ static void connect_port(LV2_Handle instance,
 
         switch ((PortIndex)port) 
         {
-			case DAW_INPUT:
-                importer->input = (const float*)data;
+			case DAW_MONO_INPUT:
+                importer->input[0] = (float*)data;
                 break;
-			case DAW_OUTPUT:
-                importer->output = (float*)data;
+			case DAW_MONO_OUTPUT:
+                importer->output[0] = (float*)data;
+                break;
+            case DAW_STEREO_INPUT:
+                importer->input[1] = (float*)data;
+                break;
+			case DAW_STEREO_OUTPUT:
+                importer->output[1] = (float*)data;
                 break;
         }
 }
@@ -107,18 +138,39 @@ std::string ReadResourcesDirPathFromSettingsFile()
 static void run(LV2_Handle instance, uint32_t n_samples)
 {
         const ImporterDAWBAE* importer = (const ImporterDAWBAE*)instance;
-
-        const float* const input  = importer->input;
-        float* const       output = importer->output;
 		
 		std::vector <float> exportOut;
 		exportOut.resize(n_samples);
 		
-        for (uint32_t pos = 0; pos < n_samples; pos++) 
-        {
-			output[pos] = input[pos];	
-			exportOut[pos] = input[pos];
-        }
+		//if data has only 1 channel
+		if(importer->n_channels == 1)
+		{
+			std::cout << "Exporting mono track...\n";
+			
+			float* mono_input  = importer->input[0];
+			float* mono_output = importer->output[0];
+			
+			for (uint32_t pos = 0; pos < n_samples; pos++) 
+			{
+				mono_output[pos] = mono_input[pos];	
+				exportOut[pos] = mono_input[pos];
+			}
+		}
+		//else if data has 2 channels
+		else if(importer->n_channels == 2)
+		{
+			std::cout << "Exporting stereo track...\n";
+			
+			float* stereo_input  = importer->input[1];
+			float* stereo_output = importer->output[1];
+			
+			for (uint32_t pos = 0; pos < n_samples; pos++) 
+			{
+				stereo_output[pos] = stereo_input[pos];	
+				exportOut[pos] = stereo_input[pos];
+			}
+		}
+       
         
         std::string resources_dir_path = ReadResourcesDirPathFromSettingsFile();
         
@@ -188,8 +240,19 @@ static const void* extension_data(const char* uri)
 
 //Every plugin must define an LV2_Descriptor. 
 //It is best to define descriptors statically to avoid leaking memory and non-portable shared library constructors and destructors to clean up properly.
-static const LV2_Descriptor descriptor = {
-        IMPORT_DAW_BAE_URI,
+static const LV2_Descriptor descriptor_mono = {
+        IMPORT_DAW_BAE_URI "#Mono",
+        instantiate,
+        connect_port,
+        activate,
+        run,
+        deactivate,
+        cleanup,
+        extension_data
+};
+
+static const LV2_Descriptor descriptor_stereo = {
+        IMPORT_DAW_BAE_URI "#Stereo",
         instantiate,
         connect_port,
         activate,
@@ -209,7 +272,8 @@ LV2_SYMBOL_EXPORT const LV2_Descriptor* lv2_descriptor(uint32_t index)
 {
         switch (index) 
         {
-			case 0:  return &descriptor;
+			case 0:  return &descriptor_mono;
+			case 1:  return &descriptor_stereo;
 			default: return NULL;
         }
 }
