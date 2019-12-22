@@ -47,6 +47,7 @@ static LV2_Handle instantiate(const LV2_Descriptor*     descriptor,
 	(void)bundle_path;  // Unused variable
 
 	ImporterDAWBAE* importer = (ImporterDAWBAE*)malloc(sizeof(ImporterDAWBAE));
+	
 	if(!importer)
 	{
 		return NULL;
@@ -65,6 +66,8 @@ static LV2_Handle instantiate(const LV2_Descriptor*     descriptor,
 		free(importer);
 		return NULL;
 	}
+	
+	importer->rate = rate;
 
 	return (LV2_Handle)importer;
 }
@@ -115,7 +118,7 @@ std::string ReadResourcesDirPathFromSettingsFile()
 	std::string resources_dir_path = "";
     if(in_file.is_open())
     {
-		std::cout << "\nRead file!\n";
+		std::cout << "\nRead settings.txt file successfully!\n";
         //Assuming we know what is & how it is stored in the file
         //Using formatted technique
         
@@ -126,7 +129,7 @@ std::string ReadResourcesDirPathFromSettingsFile()
     } 
     else 
     {
-        printf("\nCannot read file!\n");
+        printf("\nCannot read settings.txt file!\n");
     }
  
     //Closing file
@@ -158,10 +161,15 @@ static void run(LV2_Handle instance, uint32_t n_samples)
         //imposing export output restrictions
 		SF_INFO sfinfo;
 		
+		sfinfo.frames = n_samples*importer->n_channels;
+		std::cout << "\nsfinfo.frames: " << sfinfo.frames << std::endl;
 		sfinfo.channels = importer->n_channels; 
+		std::cout << "\nsfinfo.channels: " << sfinfo.channels << std::endl;
 		sfinfo.samplerate = importer->rate;
+		std::cout << "\nsfinfo.rate: " << sfinfo.samplerate << std::endl;
 		sfinfo.format = (SF_FORMAT_WAV | SF_FORMAT_PCM_16 ); 
-
+		std::cout << "\nsfinfo.format: " << sfinfo.format << std::endl;
+		
 		SNDFILE * outFile;
 
 		// Open the stream file
@@ -188,6 +196,8 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 				//mono_output[pos] = mono_input[pos];	
 				exportOut[pos] = mono_input[pos];
 			}
+			
+			std::cout << "Finished exporting mono track!\n";
 		}
 		//else if data has 2 channels
 		else if(importer->n_channels == 2)
@@ -199,12 +209,14 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 			
 			float* stereo_output = importer->output[1];
 			
-			for (uint32_t pos = 0; pos < n_samples; pos= pos + 2) 
+			for (uint32_t pos = 0; pos < n_samples; pos = pos + 2) 
 			{
 				//stereo_output[pos] = stereo_input[pos];	
 				exportOut[pos] = stereo_input_left[pos];
 				exportOut[pos + 1] = stereo_input_right[pos];
 			}
+			
+			std::cout << "Finished exporting stereo track!\n";
 		}
 		else
 		{
