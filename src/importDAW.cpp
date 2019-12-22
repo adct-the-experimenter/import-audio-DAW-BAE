@@ -145,43 +145,6 @@ std::string ReadResourcesDirPathFromSettingsFile()
 static void run(LV2_Handle instance, uint32_t n_samples)
 {
         const ImporterDAWBAE* importer = (const ImporterDAWBAE*)instance;
-		
-		std::vector <float> exportOut;
-		exportOut.resize(n_samples);
-		
-		//if data has only 1 channel
-		if(importer->n_channels == 1)
-		{
-			std::cout << "Exporting mono track...\n";
-			
-			float* mono_input  = importer->input[0];
-			float* mono_output = importer->output[0];
-			
-			for (uint32_t pos = 0; pos < n_samples; pos++) 
-			{
-				//mono_output[pos] = mono_input[pos];	
-				exportOut[pos] = mono_input[pos];
-			}
-		}
-		//else if data has 2 channels
-		else if(importer->n_channels == 2)
-		{
-			std::cout << "Exporting stereo track...\n";
-			
-			float* stereo_input  = importer->input[1];
-			float* stereo_output = importer->output[1];
-			
-			for (uint32_t pos = 0; pos < n_samples; pos++) 
-			{
-				//stereo_output[pos] = stereo_input[pos];	
-				exportOut[pos] = stereo_input[pos];
-			}
-		}
-		else
-		{
-			return;
-		}
-       
         
         std::string resources_dir_path = ReadResourcesDirPathFromSettingsFile();
         
@@ -208,7 +171,47 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 			puts (sf_strerror (NULL)) ;
 			return;
 		} 
-
+		
+		std::vector <float> exportOut;
+		exportOut.resize(n_samples);
+		
+		//if data has only 1 channel
+		if(importer->n_channels == 1)
+		{
+			std::cout << "Exporting mono track...\n";
+			
+			float* mono_input  = importer->input[0];
+			float* mono_output = importer->output[0];
+			
+			for (uint32_t pos = 0; pos < n_samples; pos++) 
+			{
+				//mono_output[pos] = mono_input[pos];	
+				exportOut[pos] = mono_input[pos];
+			}
+		}
+		//else if data has 2 channels
+		else if(importer->n_channels == 2)
+		{
+			std::cout << "Exporting stereo track...\n";
+			
+			float* stereo_input_left  = importer->input[0];
+			float* stereo_input_right  = importer->input[1];
+			
+			float* stereo_output = importer->output[1];
+			
+			for (uint32_t pos = 0; pos < n_samples; pos= pos + 2) 
+			{
+				//stereo_output[pos] = stereo_input[pos];	
+				exportOut[pos] = stereo_input_left[pos];
+				exportOut[pos + 1] = stereo_input_right[pos];
+			}
+		}
+		else
+		{
+			return;
+		}
+		
+		
 		//write data
 		size_t readSize = n_samples;
 		sf_count_t write_count = 0; 
